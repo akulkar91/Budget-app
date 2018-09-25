@@ -5,6 +5,18 @@
        this.id = id;
        this.description = description;
        this.value = value;
+       this.percentage = -1;
+     };
+     Expense.prototype.calcPercentage = function(totalInc){
+       if (totalInc > 0) {
+          this.percentage = Math.round((this.value/totalInc) * 100);
+       } else {
+         this.percentage = -1;
+       }
+     };
+
+     Expense.prototype.getPercentage = function(){
+       return this.percentage;
      };
 
      var Income = function(id, description, value) {
@@ -12,6 +24,7 @@
        this.description = description;
        this.value = value;
      };
+
 
      var calculateTotal = function(type){
           var sum=0;
@@ -97,6 +110,29 @@
 
             },
 
+            calclulatePercentages : function(){
+              /*
+                a =10
+                b =20
+                c =30
+                income = 100
+                a = 10/100 = 10%
+                b = 20/100 = 20%
+                c = 30/100 = 30%
+              */
+
+              data.allItems.exp.forEach(function(cur){
+                cur.calcPercentage(data.totals.inc);
+              })
+            },
+
+            getPercentages: function(){
+                var allPerc = data.allItems.exp.map(function(cur){
+                  return cur.getPercentage();
+                });
+                return allPerc;
+            },
+
             getBudget: function(){
 
                 return {
@@ -159,7 +195,8 @@
               incomeLabel: '.budget__income--value',
               expensesLabel: '.budget__expenses--value',
               percentageLabel: '.budget__expenses--percentage',
-              container: '.container'
+              container: '.container',
+              expensesPercLabel:'.item__percentage'
       };
 
       return {
@@ -232,7 +269,26 @@
         },
         getDOMStrings: function(){
           return DOMStrings;
-            }
+        },
+        displayPercentages: function(percentages){
+
+          var fields = document.querySelectorAll(DOMStrings.expensesPercLabel);
+
+          var nodeListForEach = function(list, callback){
+              for(i=0;i<list.length;i++){
+                callback(list[i],i);
+              }
+          };
+
+          nodeListForEach(fields,function(current, index){
+
+              if (percentages[index]>0) {
+                  current.textContent = percentages[index] + '%';
+              }else {
+                current.textContent = '---';
+              }
+          });
+        }
         };
 
  })();
@@ -269,11 +325,11 @@
    var updatePercentages = function() {
 
       //1. Calculate Percentages
-
+      budgetCtrl.calclulatePercentages();
       //2. Read percentages from the budget controller
-
+      var percentages = budgetCtrl.getPercentages();
       //3.Update the UI with new percentages
-
+      UIctrl.displayPercentages(percentages);
    };
    var ctrlAddItem = function() {
 
